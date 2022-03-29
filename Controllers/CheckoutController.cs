@@ -35,8 +35,10 @@ public class CheckoutController : ControllerBase
             return Unauthorized();
         }
         using var client = new HttpClient();
+        Console.WriteLine(ComplexCartUrl);
         var result = await client.GetAsync($"{ComplexCartUrl}/cart/{userId}");
         var responseContent = await result.Content.ReadAsStringAsync();
+        Console.WriteLine(responseContent);
         var cartItems = JsonConvert.DeserializeObject<IEnumerable<CartViewModel>>(responseContent);
         if (cartItems.Count() == 0)
         {
