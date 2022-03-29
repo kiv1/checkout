@@ -65,14 +65,14 @@ public class CheckoutController : ControllerBase
 
         //Create payment intent
         var svm = new StripeViewModel(order.Id, total, userId); 
-        json = JsonConvert.SerializeObject(svm);
-        data = new StringContent(json, Encoding.UTF8, "application/json");
+        var json = JsonConvert.SerializeObject(svm);
+        var data = new StringContent(json, Encoding.UTF8, "application/json");
         result = await client.PostAsync($"{StripeUrl}/stripe/create-payment-intent",data);
         var contents = await result.Content.ReadAsStringAsync();
 
         // Create Order in db
-        var json = JsonConvert.SerializeObject(order);
-        var data = new StringContent(json, Encoding.UTF8, "application/json");
+        json = JsonConvert.SerializeObject(order);
+        data = new StringContent(json, Encoding.UTF8, "application/json");
         await client.PostAsync($"{OrderUrl}/order/create",data);
         
         //Delete item from cart
