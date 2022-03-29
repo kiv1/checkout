@@ -47,6 +47,8 @@ public class CheckoutController : ControllerBase
 
         bool isThereChange = false;
         var listOfOrderItemViewModel = new List<OrderItemViewModel>();
+                
+        var total = 0.0;
         //Check Cart
         foreach (var cart in cartItems)
         {
@@ -54,26 +56,31 @@ public class CheckoutController : ControllerBase
             {
                 return BadRequest("There are changes to your cart as some item is not available");
             }
+            total += cart.Quantity + cart.PricePerItem;
             listOfOrderItemViewModel.Add(new OrderItemViewModel(cart.ItemId, cart.Quantity, cart.PricePerItem));
         }
-        // Create Order
-        var order = new Order(Guid.NewGuid().ToString(), userId, listOfOrderItemViewModel);
-        var json = JsonConvert.SerializeObject(order);
-        var data = new StringContent(json, Encoding.UTF8, "application/json");
-        result = await client.PostAsync($"{OrderUrl}/order/create",data);
-        //Delete item from cart
-        var total = 0.0;
-        foreach (var cart in cartItems)
-        {
-            total += cart.Quantity + cart.PricePerItem;
-            await client.DeleteAsync($"{CartUrl}/cart/{userId}/{cart.ItemId}");
-        }
 
+        //Create order obj
+        var order = new Order(Guid.NewGuid().ToString(), userId, listOfOrderItemViewModel);
+
+        //Create payment intent
         var svm = new StripeViewModel(order.Id, total, userId); 
         json = JsonConvert.SerializeObject(svm);
         data = new StringContent(json, Encoding.UTF8, "application/json");
         result = await client.PostAsync($"{StripeUrl}/stripe/create-payment-intent",data);
         var contents = await result.Content.ReadAsStringAsync();
+
+        // Create Order in db
+        var json = JsonConvert.SerializeObject(order);
+        var data = new StringContent(json, Encoding.UTF8, "application/json");
+        await client.PostAsync($"{OrderUrl}/order/create",data);
+        
+        //Delete item from cart
+        foreach (var cart in cartItems)
+        {
+            await client.DeleteAsync($"{CartUrl}/cart/{userId}/{cart.ItemId}");
+        }
+
         return Ok(contents);
     }
 
