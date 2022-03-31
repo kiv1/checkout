@@ -56,7 +56,7 @@ public class CheckoutController : ControllerBase
             {
                 return BadRequest("There are changes to your cart as some item is not available");
             }
-            total += cart.Quantity + cart.PricePerItem;
+            total += (cart.Quantity * cart.PricePerItem);
             listOfOrderItemViewModel.Add(new OrderItemViewModel(cart.ItemId, cart.Quantity, cart.PricePerItem));
         }
 
@@ -64,7 +64,7 @@ public class CheckoutController : ControllerBase
         var order = new Order(Guid.NewGuid().ToString(), userId, listOfOrderItemViewModel);
 
         //Create payment intent
-        var svm = new StripeViewModel(order.Id, total, userId); 
+        var svm = new StripeViewModel(order.Id, (total*100), userId); 
         var json = JsonConvert.SerializeObject(svm);
         var data = new StringContent(json, Encoding.UTF8, "application/json");
         result = await client.PostAsync($"{StripeUrl}/stripe/create-payment-intent",data);
