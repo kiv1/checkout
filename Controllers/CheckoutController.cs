@@ -78,7 +78,7 @@ public class CheckoutController : ControllerBase
         //Delete item from cart
         foreach (var cart in cartItems)
         {
-            await client.DeleteAsync($"{CartUrl}/cart/{userId}/{cart.ItemId}");
+            await client.DeleteAsync($"{ComplexCartUrl}/cart/{userId}/{cart.ItemId}");
         }
 
         return Ok(contents);
